@@ -45,6 +45,7 @@
     "@types/supertest": "^6.0.3",
     "@typescript-eslint/eslint-plugin": "^8.19.1",
     "@typescript-eslint/parser": "^8.19.1",
+    "@vercel/node": "^24.0.3",
     "eslint": "^8.57.1",
     "supertest": "^7.3.1",
     "tsx": "^4.19.2",
