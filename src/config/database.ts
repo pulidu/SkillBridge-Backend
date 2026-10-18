@@ -5,7 +5,17 @@ import { logger } from './logger';
 mongoose.set('strictQuery', true);
 mongoose.set('sanitizeFilter', true);
 
+let cachedPromise: Promise<typeof mongoose> | null = null;
+
 export const connectDatabase = async (): Promise<typeof mongoose> => {
+  if (mongoose.connection.readyState === 1) {
+    return mongoose;
+  }
+
+  if (cachedPromise) {
+    return cachedPromise;
+  }
+
   mongoose.connection.on('connected', () => {
     logger.info('MongoDB connected');
   });
@@ -19,11 +29,13 @@ export const connectDatabase = async (): Promise<typeof mongoose> => {
   });
 
   try {
-    return await mongoose.connect(env.mongoUri, {
+    cachedPromise = mongoose.connect(env.mongoUri, {
       serverSelectionTimeoutMS: 10_000,
       autoIndex: !env.isProduction,
     });
+    return await cachedPromise;
   } catch (error) {
+    cachedPromise = null;
     logger.error({ err: error }, 'Failed to connect to MongoDB');
     throw error;
   }

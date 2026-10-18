@@ -4,6 +4,7 @@ import compression from 'compression';
 import express, { type Application, type Request, type Response } from 'express';
 import helmet from 'helmet';
 import pinoHttp from 'pino-http';
+import { connectDatabase } from './config/database';
 import { corsOptions } from './config/cors';
 import { env } from './config/env';
 import { logger, loggerConfig } from './config/logger';
@@ -54,6 +55,16 @@ export const createApp = (): Application => {
   app.use(express.urlencoded({ extended: true, limit: '1mb' }));
   app.use(cookieParser());
   app.use(pinoHttp(loggerConfig));
+
+  /* ------------------------------- DB connect ------------------------------ */
+  app.use(async (_req, _res, next) => {
+    try {
+      await connectDatabase();
+      next();
+    } catch (error) {
+      next(error);
+    }
+  });
 
   /* ------------------------------- API routes ------------------------------ */
   app.use('/api/v1', apiLimiter, apiRouter);

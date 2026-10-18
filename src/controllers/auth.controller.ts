@@ -17,7 +17,7 @@ import type {
 const refreshCookieOptions = () => ({
   httpOnly: true,
   secure: env.cookieSecure,
-  sameSite: 'lax' as const,
+  sameSite: env.cookieSameSite,
   maxAge: 7 * 24 * 60 * 60 * 1000,
   path: '/',
   ...(env.cookieDomain ? { domain: env.cookieDomain } : {}),

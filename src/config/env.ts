@@ -56,6 +56,7 @@ const envSchema = z
 
     CORS_ORIGINS: z.string().default('http://localhost:5173,http://127.0.0.1:5173'),
     COOKIE_SECURE: booleanFromEnv,
+    COOKIE_SAME_SITE: z.enum(['lax', 'strict', 'none']).default('lax'),
     COOKIE_DOMAIN: z.string().optional().default(''),
     CLIENT_URL: z.string().default('http://localhost:5173'),
 
@@ -135,6 +136,7 @@ export const env = {
     .map((origin) => origin.trim())
     .filter(Boolean),
   cookieSecure: raw.COOKIE_SECURE,
+  cookieSameSite: raw.COOKIE_SAME_SITE,
   cookieDomain: raw.COOKIE_DOMAIN,
   clientUrl: raw.CLIENT_URL,
 
