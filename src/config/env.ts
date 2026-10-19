@@ -87,16 +87,60 @@ const envSchema = z
     }
   });
 
-const parsed = envSchema.safeParse(process.env);
+let parsed = envSchema.safeParse(process.env);
+export const envConfigErrors: string[] = [];
 
 if (!parsed.success) {
   const details = parsed.error.issues
     .map((issue) => `  - ${issue.path.join('.') || '(root)'}: ${issue.message}`)
     .join('\n');
 
+  envConfigErrors.push(...parsed.error.issues.map((i) => `${i.path.join('.') || '(root)'}: ${i.message}`));
+
   // eslint-disable-next-line no-console
   console.error(`\nInvalid environment configuration:\n${details}\n\nCopy .env.example to .env and fix the values above.\n`);
-  process.exit(1);
+
+  // In non-serverless runtime (e.g. standalone server startup) or testing, exit if explicitly standalone,
+  // but in serverless environments (e.g. Vercel), avoid crashing the entire runtime container on module load.
+  if (!process.env.VERCEL && process.env.NODE_ENV !== 'test') {
+    process.exit(1);
+  }
+
+  // Provide a safe fallback parsed result so the app module can finish initializing
+  parsed = {
+    success: true,
+    data: {
+      NODE_ENV: (process.env.NODE_ENV as 'development' | 'production' | 'test') || 'production',
+      PORT: 5000,
+      HOST: '0.0.0.0',
+      LOG_LEVEL: 'info',
+      LOG_PRETTY: false,
+      MONGODB_URI: process.env.MONGODB_URI || '',
+      MONGODB_HOST: process.env.MONGODB_HOST || '127.0.0.1',
+      MONGODB_PORT: 27017,
+      MONGODB_DB_NAME: process.env.MONGODB_DB_NAME || 'skillbridge_lms',
+      MONGODB_USER: process.env.MONGODB_USER || '',
+      MONGODB_PASSWORD: process.env.MONGODB_PASSWORD || '',
+      MONGODB_AUTH_SOURCE: process.env.MONGODB_AUTH_SOURCE || 'admin',
+      JWT_SECRET: process.env.JWT_SECRET || 'temporary-fallback-secret-for-serverless-initialization-minimum32',
+      JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || 'temporary-fallback-secret-for-serverless-initialization-minimum32',
+      JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '15m',
+      JWT_REFRESH_EXPIRES_IN: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
+      BCRYPT_SALT_ROUNDS: 12,
+      CORS_ORIGINS: process.env.CORS_ORIGINS || 'http://localhost:5173,http://127.0.0.1:5173',
+      COOKIE_SECURE: process.env.COOKIE_SECURE === 'true',
+      COOKIE_SAME_SITE: (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax',
+      COOKIE_DOMAIN: process.env.COOKIE_DOMAIN || '',
+      CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:5173',
+      RATE_LIMIT_WINDOW_MS: 15 * 60 * 1000,
+      RATE_LIMIT_MAX: 100,
+      AUTH_RATE_LIMIT_MAX: 20,
+      SEED_PASSWORD: process.env.SEED_PASSWORD || 'SkillBridge#2024',
+      ADMIN_EMAIL: process.env.ADMIN_EMAIL || '',
+      ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || '',
+      ADMIN_FULL_NAME: process.env.ADMIN_FULL_NAME || '',
+    },
+  };
 }
 
 const raw = parsed.data;

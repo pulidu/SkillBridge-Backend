@@ -56,8 +56,24 @@ export const createApp = (): Application => {
   app.use(cookieParser());
   app.use(pinoHttp(loggerConfig));
 
+  /* -------------------------------- root probe ----------------------------- */
+  app.get('/', (_req: Request, res: Response) => {
+    res.json({
+      success: true,
+      data: {
+        name: 'SkillBridge LMS API',
+        version: '1.0.0',
+        docs: '/api/v1/health',
+      },
+    });
+  });
+
   /* ------------------------------- DB connect ------------------------------ */
-  app.use(async (_req, _res, next) => {
+  // Only connect to DB on routes that require persistent storage; skip for basic health check
+  app.use(async (req, _res, next) => {
+    if (req.path === '/' || req.path === '/api/v1/health') {
+      return next();
+    }
     try {
       await connectDatabase();
       next();
@@ -81,18 +97,6 @@ app.use('/api/v1/courses', courseAssignmentRoutes);
   app.use('/api/v1/progress', progressRouter);
   app.use('/api/v1/submissions', submissionsRoutes);
   app.use('/api/v1/planner', studyTaskRoutes);
-
-  /* -------------------------------- root probe ----------------------------- */
-  app.get('/', (_req: Request, res: Response) => {
-    res.json({
-      success: true,
-      data: {
-        name: 'SkillBridge LMS API',
-        version: '1.0.0',
-        docs: '/api/v1/health',
-      },
-    });
-  });
 
   /* ------------------------------ error handling --------------------------- */
   // Order matters: unmatched routes first, then the terminal error handler.

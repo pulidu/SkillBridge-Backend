@@ -10,7 +10,14 @@ export const corsOptions: CorsOptions = {
     // Same-origin, curl and server-to-server requests have no Origin header.
     if (!origin) return callback(null, true);
 
-    if (env.corsOrigins.includes(origin)) return callback(null, true);
+    if (
+      env.corsOrigins.includes(origin) ||
+      origin.endsWith('.vercel.app') ||
+      origin.includes('localhost') ||
+      origin.includes('127.0.0.1')
+    ) {
+      return callback(null, true);
+    }
 
     return callback(new Error(`Origin ${origin} is not allowed by CORS`));
   },
