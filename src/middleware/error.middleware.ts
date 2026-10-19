@@ -48,7 +48,7 @@ export const errorHandler: ErrorRequestHandler = (error, req, res, _next) => {
     statusCode = 400;
     message = 'Malformed JSON in request body';
   } else if (error instanceof Error) {
-    message = env.isProduction ? 'Internal server error' : error.message;
+    message = env.isProduction && statusCode === 500 ? 'Internal server error' : error.message;
   }
 
   if (statusCode >= 500) {
