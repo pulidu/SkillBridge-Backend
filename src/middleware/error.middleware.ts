@@ -19,10 +19,11 @@ export const errorHandler: ErrorRequestHandler = (error, req, res, _next) => {
   let message = 'Internal server error';
   let errors: { field: string; message: string }[] | undefined;
 
-  if (error instanceof ApiError) {
-    statusCode = error.statusCode;
-    message = error.message;
-    errors = error.errors;
+  if (error instanceof ApiError || (error && typeof error === 'object' && 'statusCode' in error && typeof (error as Record<string, unknown>).statusCode === 'number')) {
+    const err = error as { statusCode: number; message: string; errors?: { field: string; message: string }[] };
+    statusCode = err.statusCode;
+    message = err.message;
+    errors = err.errors;
   } else if (error instanceof ZodError) {
     statusCode = 422;
     message = 'Validation failed';
