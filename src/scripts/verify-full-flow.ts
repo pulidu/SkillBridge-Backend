@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const API_BASE = 'http://localhost:5000/api/v1';
 
-async function request(path: string, options: { method?: string; headers?: Record<string, string>; body?: unknown } = {}): Promise<{ status: number; ok: boolean; data: any }> {
+async function request(path: string, options: { method?: string; headers?: Record<string, string>; body?: unknown } = {}): Promise<{ status: number; ok: boolean; data: unknown }> {
   const url = `${API_BASE}${path}`;
   const method = options.method || 'GET';
   const headers: Record<string, string> = {
@@ -20,7 +20,7 @@ async function request(path: string, options: { method?: string; headers?: Recor
   }
 
   const res = await fetch(url, fetchOptions);
-  let data: any = null;
+  let data: unknown = null;
   try {
     data = await res.json();
   } catch {
